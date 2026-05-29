@@ -9,9 +9,13 @@ import SwiftUI
 
 @main
 struct aurorachat_macosApp: App {
+    @State private var client = AuroraClient()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(client)
         }
+        .defaultSize(width: 900, height: 650)
     }
 }

@@ -8,17 +8,27 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(AuroraClient.self) private var client
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        Group {
+            switch client.currentScreen {
+            case .login:
+                LoginView()
+                    .transition(.opacity)
+            case .rooms:
+                RoomListView()
+                    .transition(.opacity)
+            case .chat:
+                ChatView()
+                    .transition(.opacity)
+            }
         }
-        .padding()
+        .animation(.easeInOut(duration: 0.25), value: client.currentScreen)
     }
 }
 
 #Preview {
     ContentView()
+        .environment(AuroraClient())
 }
