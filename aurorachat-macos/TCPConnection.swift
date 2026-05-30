@@ -2,9 +2,6 @@
 //  TCPConnection.swift
 //  aurorachat-macos
 //
-//  TCP socket connection using Network.framework for real-time message reception.
-//  Messages arrive as: username|message|room|\n
-//
 
 import Foundation
 import Network
@@ -39,11 +36,13 @@ final class TCPConnection: Sendable {
                 guard let self else { return }
                 switch state {
                 case .ready:
+                    print("[tcp] connected to \(self.host):\(self.port)")
                     self.onStateChanged?(.connected)
                     self.startReceiving()
                 case .waiting:
                     self.onStateChanged?(.reconnecting)
                 case .failed:
+                    print("[tcp] connection failed")
                     self.onStateChanged?(.disconnected)
                     self.attemptReconnect()
                 case .cancelled:
@@ -69,7 +68,7 @@ final class TCPConnection: Sendable {
         pendingBuffer = ""
     }
 
-    // MARK: - Receive Loop
+    // keep reading from the tcp socket
 
     private func startReceiving() {
         connection?.receive(minimumIncompleteLength: 1, maximumLength: 4096) { [weak self] data, _, isComplete, error in
@@ -99,7 +98,7 @@ final class TCPConnection: Sendable {
         }
     }
 
-    // MARK: - Parse Messages
+    // parse incoming buffer into messages (username|message|room|)
 
     private func processBuffer() {
         while let newlineIndex = pendingBuffer.firstIndex(of: "\n") {

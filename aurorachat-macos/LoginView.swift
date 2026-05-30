@@ -1,21 +1,14 @@
-//
-//  LoginView.swift
-//  aurorachat-macos
-//
-//  Login and signup screen for AuroraChat.
-//
-
 import SwiftUI
 
 struct LoginView: View {
     @Environment(AuroraClient.self) private var client
+    @Environment(ThemeManager.self) private var theme
 
     @State private var username: String = ""
     @State private var password: String = ""
     @State private var isSignUp: Bool = false
     @State private var isLoading: Bool = false
     @State private var errorMessage: String? = nil
-    @State private var showServerConfig: Bool = false
     @State private var shakeOffset: CGFloat = 0
 
     var body: some View {
@@ -24,32 +17,11 @@ struct LoginView: View {
 
             // Logo & Title
             VStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(red: 0.4, green: 0.3, blue: 0.9), Color(red: 0.6, green: 0.2, blue: 0.8)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 80, height: 80)
-                        .shadow(color: .purple.opacity(0.4), radius: 20, y: 8)
-
-                    Image(systemName: "bubble.left.and.bubble.right.fill")
-                        .font(.system(size: 32))
-                        .foregroundStyle(.white)
-                }
-
-                Text("AuroraChat")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color(red: 0.5, green: 0.3, blue: 0.9), Color(red: 0.7, green: 0.3, blue: 0.8)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                Image("AuroraChatLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 80)
+                    .shadow(color: Color(red: 0.1, green: 0.7, blue: 0.7).opacity(0.35), radius: 20, y: 6)
 
                 Text(isSignUp ? "Create your account" : "Welcome back")
                     .font(.subheadline)
@@ -110,8 +82,8 @@ struct LoginView: View {
             .offset(x: shakeOffset)
             .padding(.bottom, 20)
 
-            // Buttons
             VStack(spacing: 10) {
+                // TODO: add "remember me" toggle
                 Button(action: handleAuth) {
                     HStack {
                         if isLoading {
@@ -126,7 +98,7 @@ struct LoginView: View {
                     .padding(.vertical, 10)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(Color(red: 0.5, green: 0.3, blue: 0.9))
+                .tint(theme.colors.accent)
                 .disabled(isLoading)
 
                 Button(action: {
@@ -146,11 +118,13 @@ struct LoginView: View {
 
             // Bottom section: Server Config + Version
             VStack(spacing: 8) {
-                Button(action: { showServerConfig.toggle() }) {
+                Button(action: {
+                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                }) {
                     HStack(spacing: 4) {
                         Image(systemName: "gear")
                             .font(.caption2)
-                        Text("Server Settings")
+                        Text("Settings")
                             .font(.caption)
                     }
                     .foregroundStyle(.secondary)
@@ -167,13 +141,9 @@ struct LoginView: View {
         .onAppear {
             username = client.lastUsername
         }
-        .sheet(isPresented: $showServerConfig) {
-            ServerConfigView()
-                .environment(client)
-        }
     }
 
-    // MARK: - Auth Handler
+    // auth logic
 
     private func handleAuth() {
         guard !isLoading else { return }
@@ -187,6 +157,7 @@ struct LoginView: View {
                     try await client.signup(username: username, password: password)
                 } else {
                     try await client.login(username: username, password: password)
+                    print("logged in as \(username)") // debug
                 }
                 password = "" // Clear password on success
             } catch let error as AuroraError {

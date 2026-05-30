@@ -2,13 +2,12 @@
 //  Models.swift
 //  aurorachat-macos
 //
-//  AuroraChat v6 data models
-//
 
 import Foundation
 
 // MARK: - App Navigation
 
+// TODO: add a .settings screen later?
 enum AppScreen {
     case login
     case rooms
@@ -49,7 +48,8 @@ struct Room: Identifiable, Equatable, Hashable {
     }
 }
 
-// MARK: - Auth Error
+// errors from the server
+// see server.js for the full list
 
 enum AuroraError: LocalizedError {
     case wrongPassword
@@ -115,7 +115,7 @@ enum AuroraError: LocalizedError {
     }
 }
 
-// MARK: - Connection State
+// connection status
 
 enum ConnectionState: Equatable {
     case disconnected

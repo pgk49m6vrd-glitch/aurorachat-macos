@@ -2,8 +2,6 @@
 //  MessageBubbleView.swift
 //  aurorachat-macos
 //
-//  Reusable message display component, styled like Discord/other AuC clients.
-//
 
 import SwiftUI
 
@@ -18,7 +16,7 @@ struct MessageBubbleView: View {
         }
     }
 
-    // MARK: - User Message
+    // user vs system message
 
     private var userMessage: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -95,7 +93,8 @@ struct MessageBubbleView: View {
         .padding(.vertical, 6)
     }
 
-    // MARK: - Helpers
+    // FIXME: avatar colors can collide if two users have similar hash values
+    // not a huge deal but might want to fix eventually
 
     private var avatarColor: Color {
         let colors: [Color] = [
@@ -107,8 +106,8 @@ struct MessageBubbleView: View {
             Color(red: 0.8, green: 0.3, blue: 0.6),
             Color(red: 0.3, green: 0.6, blue: 0.8),
         ]
-        let index = abs(message.username.hashValue) % colors.count
-        return colors[index]
+        let idx = abs(message.username.hashValue) % colors.count
+        return colors[idx]
     }
 
     private var systemBarColor: Color {

@@ -2,8 +2,8 @@
 //  AuroraClient.swift
 //  aurorachat-macos
 //
-//  Main networking client for AuroraChat v6.
-//  Handles HTTP API calls (login, signup, rooms, chat) and TCP real-time connection.
+//  Networking client for AuroraChat v6
+//  handles HTTP + TCP stuff
 //
 
 import Foundation
@@ -78,7 +78,7 @@ final class AuroraClient {
         }
     }
 
-    // MARK: - HTTP Helpers
+    // -- http helpers --
 
     private var baseURL: String {
         "http://\(serverIP):\(httpPort)"
@@ -102,6 +102,7 @@ final class AuroraClient {
         request.httpBody = body.data(using: .utf8)
 
         let (data, _) = try await URLSession.shared.data(for: request)
+        // print("[DEBUG] response: \(String(data: data, encoding: .utf8) ?? "nil"))")
 
         guard let response = String(data: data, encoding: .utf8) else {
             throw AuroraError.serverUnreachable
@@ -110,7 +111,7 @@ final class AuroraClient {
         return response
     }
 
-    // MARK: - Login
+    // FIXME: should probably add rate limiting at some point
 
     func login(username: String, password: String) async throws {
         errorMessage = nil
@@ -133,7 +134,7 @@ final class AuroraClient {
             throw error
         }
 
-        // Parse token — response format: "token|\n"
+        // token is first part before the pipe
         let token = response
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .components(separatedBy: "|")
@@ -152,8 +153,6 @@ final class AuroraClient {
         // Fetch rooms and connect
         await postLogin()
     }
-
-    // MARK: - Signup
 
     func signup(username: String, password: String) async throws {
         errorMessage = nil
@@ -191,7 +190,7 @@ final class AuroraClient {
         await postLogin()
     }
 
-    // MARK: - Post-Login Setup
+    // TODO: maybe add a "remember me" checkbox later
 
     private func postLogin() async {
         do {
@@ -215,7 +214,7 @@ final class AuroraClient {
         currentScreen = .chat
     }
 
-    // MARK: - Fetch Rooms
+    // fetch available rooms from server
 
     func fetchRooms() async throws {
         let response: String
@@ -225,7 +224,6 @@ final class AuroraClient {
             throw AuroraError.serverUnreachable
         }
 
-        // Format: "count|room1|room2|...|"
         let parts = response.components(separatedBy: "|").filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
         guard let countStr = parts.first, let count = Int(countStr), count > 0 else {
@@ -244,11 +242,13 @@ final class AuroraClient {
     }
 
     // MARK: - Send Message
+    // TODO: add typing indicator support
 
-    func sendMessage(_ text: String, in room: String) async {
-        guard !text.isEmpty else { return }
+    func sendMessage(_ txt: String, in room: String) async {
+        guard !txt.isEmpty else { return }
 
-        let body = "\(text)|\(room)|"
+        let body = "\(txt)|\(room)|"
+        print("[send] \(room): \(txt.prefix(50))")
 
         do {
             let response = try await postRequest(endpoint: "/api/chat", body: body, auth: authToken)

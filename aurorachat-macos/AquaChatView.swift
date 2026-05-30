@@ -1,80 +1,91 @@
 import SwiftUI
 
-struct ChatView: View {
+struct AquaChatView: View {
     @Environment(AuroraClient.self) private var client
     @Environment(ThemeManager.self) private var theme
     @State private var messageText: String = ""
 
     var body: some View {
         NavigationSplitView {
-            sidebar
-                .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 280)
+            aquaSidebar
+                .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 260)
         } detail: {
-            chatArea
+            aquaChatArea
         }
     }
 
-    // sidebar + detail layout
+    // MARK: - Aqua Sidebar
 
-    private var sidebar: some View {
+    private var aquaSidebar: some View {
         VStack(spacing: 0) {
+            // Aqua header bar
             HStack {
                 Image("AuroraChatLogo")
                     .resizable()
                     .scaledToFit()
-                    .frame(height: 28)
+                    .frame(height: 24)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.88, green: 0.91, blue: 0.96),
+                        Color(red: 0.78, green: 0.82, blue: 0.88)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
 
             Divider()
 
-            VStack(alignment: .leading, spacing: 4) {
+            // Rooms
+            VStack(alignment: .leading, spacing: 2) {
                 HStack {
-                    Text("ROOMS")
+                    Text("Rooms")
                         .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(.secondary)
                     Spacer()
                     Button(action: { client.currentScreen = .rooms }) {
                         Image(systemName: "square.grid.2x2")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
                     }
                     .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
                 .padding(.bottom, 4)
 
                 ScrollView {
-                    LazyVStack(spacing: 2) {
+                    LazyVStack(spacing: 1) {
                         ForEach(client.rooms) { room in
-                            RoomRow(room: room, isSelected: room.name == client.currentRoom)
+                            aquaRoomRow(room: room)
                                 .onTapGesture {
-                                    withAnimation(.easeInOut(duration: 0.15)) {
-                                        client.switchRoom(to: room.name)
-                                    }
+                                    client.switchRoom(to: room.name)
                                 }
                         }
                     }
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, 6)
                 }
             }
 
             Spacer()
+
             Divider()
 
-            HStack(spacing: 8) {
+            // User info
+            HStack(spacing: 6) {
                 Circle()
                     .fill(connectionColor)
                     .frame(width: 8, height: 8)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(client.currentUsername)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 11, weight: .medium))
                         .lineLimit(1)
                     Text(client.connectionState.label)
-                        .font(.system(size: 10))
+                        .font(.system(size: 9))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -84,40 +95,77 @@ struct ChatView: View {
                     Button("Log Out", role: .destructive) { client.logout() }
                 } label: {
                     Image(systemName: "ellipsis.circle")
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }
                 .menuStyle(.borderlessButton)
-                .frame(width: 24)
+                .frame(width: 20)
             }
-            .padding(12)
+            .padding(10)
+            .background(Color(red: 0.85, green: 0.88, blue: 0.93))
         }
+        .background(AquaPinstripeBackground())
+    }
+
+    @ViewBuilder
+    private func aquaRoomRow(room: Room) -> some View {
+        let isSelected = room.name == client.currentRoom
+        HStack(spacing: 6) {
+            Text("#")
+                .font(.system(size: 14, weight: .medium, design: .monospaced))
+                .foregroundStyle(isSelected ? .white : theme.colors.accent)
+            Text(room.name)
+                .font(.system(size: 12))
+                .foregroundStyle(isSelected ? .white : .primary)
+                .lineLimit(1)
+            Spacer()
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(isSelected
+                      ? LinearGradient(colors: theme.colors.accentGradient, startPoint: .top, endPoint: .bottom)
+                      : LinearGradient(colors: [Color.clear], startPoint: .top, endPoint: .bottom))
+        )
+        .contentShape(Rectangle())
     }
 
     // MARK: - Chat Area
-    // FIXME: scroll position jumps sometimes when switching rooms
 
-    private var chatArea: some View {
+    private var aquaChatArea: some View {
         VStack(spacing: 0) {
-            // Channel Header
-            HStack(spacing: 8) {
+            // Aqua-style header
+            HStack(spacing: 6) {
                 Image(systemName: "number")
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                 Text(client.currentRoom)
-                    .font(.title3.bold())
+                    .font(.system(size: 14, weight: .bold))
                 Spacer()
                 HStack(spacing: 4) {
                     Circle().fill(connectionColor).frame(width: 6, height: 6)
                     Text(client.connectionState.label)
-                        .font(.caption)
+                        .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(.bar)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.88, green: 0.91, blue: 0.96),
+                        Color(red: 0.78, green: 0.82, blue: 0.88)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
 
             Divider()
 
+            // Messages
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 0) {
@@ -125,8 +173,9 @@ struct ChatView: View {
                             MessageBubbleView(message: msg).id(msg.id)
                         }
                     }
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 6)
                 }
+                .background(Color.white)
                 .onChange(of: client.messages.count) {
                     if let last = client.currentMessages.last {
                         withAnimation(.easeOut(duration: 0.2)) {
@@ -138,25 +187,26 @@ struct ChatView: View {
 
             Divider()
 
+            // Aqua input bar
             HStack(spacing: 8) {
                 TextField("Message #\(client.currentRoom)...", text: $messageText)
-                    .textFieldStyle(.plain)
-                    .padding(10)
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .textFieldStyle(.roundedBorder)
+                    .font(.system(size: 13))
                     .onSubmit { sendMessage() }
 
                 Button(action: sendMessage) {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(messageText.isEmpty ? .secondary : theme.colors.accent)
+                    Text("Send")
+                        .font(.system(size: 12))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(AquaButtonStyle(isPrimary: true))
                 .disabled(messageText.isEmpty)
             }
-            .padding(12)
+            .padding(10)
+            .background(AquaPinstripeBackground())
         }
     }
+
+    // MARK: - Helpers
 
     private var connectionColor: Color {
         switch client.connectionState {
@@ -167,37 +217,10 @@ struct ChatView: View {
     }
 
     private func sendMessage() {
-        let txt = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !txt.isEmpty else { return }
+        let text = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
         let room = client.currentRoom
         messageText = ""
-        Task { await client.sendMessage(txt, in: room) }
-    }
-}
-
-struct RoomRow: View {
-    let room: Room
-    let isSelected: Bool
-    @State private var isHovered = false
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Text("#")
-                .font(.system(size: 16, weight: .medium, design: .monospaced))
-                .foregroundStyle(isSelected ? .primary : .secondary)
-            Text(room.name)
-                .font(.system(size: 13))
-                .foregroundStyle(isSelected ? .primary : .secondary)
-                .lineLimit(1)
-            Spacer()
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(isSelected ? Color.primary.opacity(0.08) : (isHovered ? Color.primary.opacity(0.04) : Color.clear))
-        )
-        .contentShape(Rectangle())
-        .onHover { isHovered = $0 }
+        Task { await client.sendMessage(text, in: room) }
     }
 }

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct RoomListView: View {
     @Environment(AuroraClient.self) private var client
+    @Environment(ThemeManager.self) private var theme
     @State private var isRefreshing = false
 
     private let columns = [
@@ -41,7 +42,7 @@ struct RoomListView: View {
                     client.currentScreen = .chat
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(Color(red: 0.5, green: 0.3, blue: 0.9))
+                .tint(theme.colors.accent)
             }
             .padding(20)
 
